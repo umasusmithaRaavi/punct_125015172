@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Translation App</title>
+</head>
+<body style="background-color: powderblue;">
+    <h1>Language Translation App</h1>
+
+    <div>
+        <label for="inputText">Enter text to translate:</label><br>
+        <textarea id="inputText" rows="4" cols="50"></textarea><br><br>
+
+        <label for="targetLanguage">Select target language:</label>
+        <select id="targetLanguage">
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <!-- Add more languages as needed -->
+        </select><br><br>
+
+        <button onclick="translateText()">Translate</button>
+        <button onclick="speechToText()">Speech to Text</button>
+        <button onclick="textToSpeech()">Text to Speech</button>
+    </div>
+
+    <div id="translationResult"></div>
+    <audio id="audioPlayer" controls></audio>
+
+    <script>
+        function translateText() {
+            let inputText = document.getElementById('inputText').value;
+            let targetLanguage = document.getElementById('targetLanguage').value;
+
+            fetch('/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: inputText, target_language: targetLanguage })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('translationResult').innerText = data.translated_text;
+            });
+        }
+
+        function speechToText() {
+            let formData = new FormData();
+            let audioFile = document.querySelector('input[type="file"]').files[0];
+            formData.append('audio', audioFile);
+
+            fetch('/speech-to-text', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('inputText').value = data.transcription;
+            });
+        }
+
+        function textToSpeech() {
+            let inputText = document.getElementById('inputText').value;
+
+            fetch('/text-to-speech', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: inputText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let audioPlayer = document.getElementById('audioPlayer');
+                audioPlayer.src = '/output.mp3';  // Adjust filename as needed
+                audioPlayer.play();
+            });
+        }
+    </script>
+</body>
+</html>
